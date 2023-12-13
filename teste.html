@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Notas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        label, p {
+            margin: 10px 0;
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0 20px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        button {
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #004494;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            text-align: left;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Calculadora de Notas</h1>
+        
+        <label for="notaN1">Nota N1 (vale 40%): </label>
+        <input type="number" id="notaN1" step="0.01">
+        <button onclick="calcularN1()">Calcular</button>
+        <p>Resultado N1 ponderado: <span id="resultadoN1"></span></p>
+
+        <h2>Quantas questões preciso acertar na N2? (Peso de 60% na N2)</h2>
+        <table id="combinacoes">
+            <!-- As linhas da tabela serão inseridas aqui pelo JavaScript -->
+        </table>
+    </div>
+
+    <script>
+        function calcularN1() {
+            let notaN1 = parseFloat(document.getElementById('notaN1').value);
+            let resultadoN1 = notaN1 * 0.4; // 40% da nota N1
+            document.getElementById('resultadoN1').textContent = resultadoN1.toFixed(2);
+
+            calcularN2(resultadoN1);
+        }
+
+        function calcularN2(resultadoN1) {
+            const notaAPS = 1; // Ponto extra da APS
+            const valorQuestaoFechada = 0.6;
+            const valorQuestaoAberta = 1.5;
+            const notaMaximaN2 = 9; // Nota máxima na N2 considerando APS
+            const notaNecessariaN2 = notaMaximaN2 - resultadoN1 - notaAPS;
+
+            let combinacoes = calcularCombinacoes(notaNecessariaN2, valorQuestaoFechada, valorQuestaoAberta, resultadoN1);
+            exibirCombinacoes(combinacoes, resultadoN1, valorQuestaoFechada, valorQuestaoAberta);
+        }
+
+        function calcularCombinacoes(notaNecessariaN2, valorQuestaoFechada, valorQuestaoAberta, resultadoN1) {
+            let combinacoes = [];
+            for (let abertas = 0; abertas <= 2; abertas++) {
+                let notaRestante = notaNecessariaN2 - abertas * valorQuestaoAberta;
+                let fechadasNecessarias = Math.ceil(notaRestante / valorQuestaoFechada);
+                if (fechadasNecessarias <= 10) {
+                    let totalN2 = (fechadasNecessarias * valorQuestaoFechada + abertas * valorQuestaoAberta) * 0.6;
+                    let total = resultadoN1 + totalN2;
+                    if (total >= 6) {
+                        combinacoes.push({ abertas: abertas, fechadas: fechadasNecessarias, total: total });
+                    }
+                }
+            }
+            return combinacoes;
+        }
+
+        function exibirCombinacoes(combinacoes) {
+            let linhas = combinacoes.map(c => {
+                let pontosN2 = (c.fechadas * 0.6) + (c.abertas * 1.5);
+                let totalN2 = pontosN2 * 0.6; // 60% da nota N2
+                return `<tr>
+                            <td>Acertando ${c.abertas} aberta(s) e ${c.fechadas} fechada(s)</td>
+                            <td>${pontosN2.toFixed(2)} pontos</td>
+                            <td>N2: ${totalN2.toFixed(2)} + N1: ${c.total.toFixed(2)}</td>
+                            <td>Total: ${c.total.toFixed(2)} pontos</td>
+                        </tr>`;
+            });
+
+            document.getElementById('combinacoes').innerHTML = `<tr>
+                                                                    <th>Combinação</th>
+                                                                    <th>Pontos N2</th>
+                                                                    <th>Detalhes</th>
+                                                                    <th>Total</th>
+                                                                </tr>` + linhas.join('');
+        }
+    </script>
+</body>
+</html>
